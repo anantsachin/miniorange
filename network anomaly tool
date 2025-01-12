@@ -1,0 +1,174 @@
+import React, { useState, useEffect } from 'react';
+import { Shield, AlertTriangle, Check, X, Activity, Lock } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+//live:https://claude.site/artifacts/ac1f6f38-fa58-48cb-8a28-fa17ec4bb721
+
+const SecurityAnalysisTool = () => {
+  const [scanning, setScanning] = useState(false);
+  const [threatLevel, setThreatLevel] = useState(0);
+  const [threats, setThreats] = useState([]);
+  const [scanProgress, setScanProgress] = useState(0);
+  const [networkData, setNetworkData] = useState([]);
+
+  // Simulate AI analysis
+  const startScan = () => {
+    setScanning(true);
+    setScanProgress(0);
+    setThreats([]);
+    generateNetworkData();
+
+    const interval = setInterval(() => {
+      setScanProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setScanning(false);
+          generateThreats();
+          return 100;
+        }
+        return prev + 2;
+      });
+    }, 100);
+  };
+
+  // Generate sample network traffic data
+  const generateNetworkData = () => {
+    const data = Array.from({ length: 24 }, (_, i) => ({
+      time: `${i}:00`,
+      traffic: Math.floor(Math.random() * 100) + 20,
+      anomalies: Math.floor(Math.random() * 5),
+    }));
+    setNetworkData(data);
+  };
+
+  // Simulate threat detection
+  const generateThreats = () => {
+    const possibleThreats = [
+      {
+        type: 'Suspicious Network Activity',
+        severity: 'High',
+        description: 'Unusual outbound traffic detected from internal network',
+        recommendation: 'Investigate source IP and implement network segmentation'
+      },
+      {
+        type: 'Potential Data Exfiltration',
+        severity: 'Critical',
+        description: 'Large data transfer to unknown external endpoint',
+        recommendation: 'Block suspicious IP and review firewall rules'
+      },
+      {
+        type: 'Malware Signature Detected',
+        severity: 'Medium',
+        description: 'Known malware pattern identified in network traffic',
+        recommendation: 'Update antivirus definitions and scan affected systems'
+      }
+    ];
+
+    const detectedThreats = possibleThreats
+      .filter(() => Math.random() > 0.5)
+      .map(threat => ({
+        ...threat,
+        id: Math.random().toString(36).substr(2, 9),
+        timestamp: new Date().toISOString()
+      }));
+
+    setThreats(detectedThreats);
+    setThreatLevel(detectedThreats.length * 33);
+  };
+
+  return (
+    <div className="w-full max-w-4xl mx-auto p-4 space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-6 w-6" />
+            AI-Powered Security Analysis Dashboard
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4">
+            {/* Control Panel */}
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                <span>System Status: {scanning ? 'Scanning...' : 'Ready'}</span>
+              </div>
+              <button
+                onClick={startScan}
+                disabled={scanning}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              >
+                {scanning ? 'Scanning...' : 'Start Security Scan'}
+              </button>
+            </div>
+
+            {/* Progress Bar */}
+            {scanning && (
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div
+                  className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                  style={{ width: `${scanProgress}%` }}
+                ></div>
+              </div>
+            )}
+
+            {/* Threat Level Indicator */}
+            {!scanning && threats.length > 0 && (
+              <div className="mt-4">
+                <Alert variant={threatLevel > 66 ? "destructive" : threatLevel > 33 ? "warning" : "default"}>
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Current Threat Level: {threatLevel}%</AlertTitle>
+                  <AlertDescription>
+                    {threatLevel > 66 ? 'Critical security issues detected' : 
+                     threatLevel > 33 ? 'Moderate security concerns present' : 
+                     'Low security risk detected'}
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
+
+            {/* Network Traffic Chart */}
+            <div className="h-64 mt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={networkData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="time" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="traffic" stroke="#2563eb" />
+                  <Line type="monotone" dataKey="anomalies" stroke="#dc2626" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Threats List */}
+            {threats.length > 0 && (
+              <div className="mt-4 space-y-2">
+                <h3 className="text-lg font-semibold">Detected Threats</h3>
+                {threats.map(threat => (
+                  <Alert key={threat.id} variant={
+                    threat.severity === 'Critical' ? "destructive" : 
+                    threat.severity === 'High' ? "warning" : "default"
+                  }>
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertTitle>{threat.type}</AlertTitle>
+                    </div>
+                    <AlertDescription>
+                      <p>{threat.description}</p>
+                      <p className="mt-2 font-semibold">Recommendation: {threat.recommendation}</p>
+                    </AlertDescription>
+                  </Alert>
+                ))}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default SecurityAnalysisTool;
